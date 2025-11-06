@@ -1,2 +1,3 @@
-# ecma
-Xây dựng hệ đo điện hóa
+# cv
+# pip install -r requirements.txt
+# main.py
