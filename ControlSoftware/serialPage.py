@@ -40,8 +40,9 @@ class SecondPage(Frame):
         self.statusBar.pack(side=BOTTOM, fill=X)
 
         self.variable()
-        wP.FirstPage.add_logo(self, "images/huet.png", 120, 10)
-        wP.FirstPage.add_logo(self, "images/uet.png", 220, 10)
+        wP.FirstPage.add_logo(self, "images/huet.png", 50, 10)
+        wP.FirstPage.add_logo(self, "images/uet.png", 150, 10)
+        wP.FirstPage.add_logo(self, "images/ccu.png", 250, 10)
         self.connectFrame()
         self.configureFrame()
         self.informationFrame()
@@ -56,6 +57,7 @@ class SecondPage(Frame):
 
         self.idTreeView = []
         self.df = pd.DataFrame()
+        self.times = []
 
         self.x = []
         self.x1 = []
@@ -265,6 +267,7 @@ class SecondPage(Frame):
             data = self.ser.readline().decode().split(";")
             self.x.append(int(data[0]))
             self.y.append(float(data[1]))
+            self.times.append(data[2].replace("\r\n",""))
             x.append(int(data[0]))
             y.append(float(data[1]))
             self.ax.plot(x, y, color=set_color, linewidth=1)
@@ -287,6 +290,8 @@ class SecondPage(Frame):
         return filtered_current
 
     def endingPlot(self):
+        print(self.times)
+        pd.DataFrame(self.times).to_csv("data1.csv")
         self.canvas.get_tk_widget().destroy()
         self.fig_lowpass = Figure()
         self.ax_lowpass = self.fig_lowpass.add_subplot(111)
@@ -334,7 +339,8 @@ class SecondPage(Frame):
                     temp = listValues[i]
         self.df = pd.DataFrame(np.column_stack(temp), columns=columnName[:int(self.entryRT.get())*3])
         self.buttonSave.configure(state=NORMAL)
-        messagebox.showinfo("Nofitication", "Complete the measurement")
+        self.calculatecM()
+        # messagebox.showinfo("Nofitication", "Complete the measurement")
        
     def updateDataTable(self, turn, filtered):
         for i in range(len(filtered)*turn, len(filtered)*(turn+1)):
@@ -365,11 +371,17 @@ class SecondPage(Frame):
             a = float(entrya.get())
             b = float(entryb.get())
 
+            cm_list = []
+
             def cM(y, a, b):
                 x = (y-b)/a
-                return round(x, 3)
+                return round(x, 2)
 
-            self.entryConcentration.configure(text=str(cM(max(self.max_vl), a, b)))
+            for i, phan_tu in enumerate(self.max_vl):
+                cm = cM(phan_tu, a, b)
+
+                cm_list.append(cm)
+            self.entryConcentration.configure(text=', '.join(str(i) for i in cm_list))
             newWindow.destroy()
             messagebox.showinfo("Notification", "Complete the measurement")
 
@@ -469,20 +481,15 @@ class SecondPage(Frame):
     def save(self):
         now = datetime.now()
         dt_str = now.strftime("%H_%M_%S")
-        date_str = now.strftime("%d_%m_%Y")
+        # date_str = now.strftime("%d_%m_%Y")
         patch1 = self.entryToS.get()
-        patch2 = self.entryConcentration.cget('text')
-        patch3 = self.entryMT.get()
-        patch = "data/"+patch1+"/"+patch2+"/"+date_str+"/"+patch3+"/"
+        patch2 = self.entryMT.get()
+        patch = "data/" + patch1 + "/" + patch2 + "/"
         if not self.df.empty:
             if not os.path.exists("data"):
                 os.mkdir("data")
-            if not os.path.exists("data/"+patch1):
-                os.mkdir("data/"+patch1)
-            if not os.path.exists("data/"+patch1+"/"+patch2):
-                os.mkdir("data/"+patch1+"/"+patch2)
-            if not os.path.exists("data/"+patch1+"/"+patch2+"/"+date_str):
-                os.mkdir("data/"+patch1+"/"+patch2+"/"+date_str)
+            if not os.path.exists("data/" + patch1):
+                os.mkdir("data/" + patch1)
             if not os.path.exists(patch):
                 os.mkdir(patch)
             self.df.to_csv(patch+dt_str+".csv", index=False)
@@ -495,11 +502,13 @@ class SecondPage(Frame):
         self.canvas.get_tk_widget().destroy()
         self.frameDataTable.destroy()
         self.toolbar.destroy()
+        self.entryConcentration.configure(text='None')
 
         self.idTreeView = []
         self.df = pd.DataFrame()
         self.statusPlot = False
         self.number = 0
+        self.times = []
 
         self.x = []
         self.x1 = []

@@ -34,8 +34,9 @@ class ThirdPage(Frame):
         self.frameDataTable = LabelFrame(self, text="Data Table")
         self.frameDataTable.place(x=435, y=45, height=520, width=835)
 
-        wP.FirstPage.add_logo(self, "images/huet.png", 120, 10)
-        wP.FirstPage.add_logo(self, "images/uet.png", 220, 10)
+        wP.FirstPage.add_logo(self, "images/huet.png", 50, 10)
+        wP.FirstPage.add_logo(self, "images/uet.png", 150, 10)
+        wP.FirstPage.add_logo(self, "images/ccu.png", 250, 10)
 
     def fileOptionFrame(self):
         frameOperationsFile = LabelFrame(self, text="File Manipulation Options")
@@ -63,6 +64,13 @@ class ThirdPage(Frame):
         self.buttonPlot = Button(frameOperationsFile, text="Plot Filtered Figure", width=14, state=DISABLED, command=self.plotFigure)
         self.buttonPlot.place(x=110, y=70)
 
+        self.buttonExcel = Button(frameOperationsFile, text="Save Xlsx", width=14, state=DISABLED,
+                                 command=self.saveXlsx)
+        self.buttonExcel.place(x=230, y=70)
+
+    def saveXlsx(self):
+        self.df.to_excel(self.filepath.split('.')[0]+'.xlsx', index=False)
+
     def openfile(self):
         self.filepath = filedialog.askopenfilename(filetypes=[("Comma Separated Values", ".csv")])
         self.labelFileName.configure(text=os.path.basename(self.filepath))
@@ -75,6 +83,7 @@ class ThirdPage(Frame):
         self.buttonClearFile.configure(state=NORMAL)
         self.buttonSend.configure(state=NORMAL)
         self.buttonPlot.configure(state=NORMAL)
+        self.buttonExcel.configure(state=NORMAL)
         self.buttonLoadFile.configure(state=DISABLED)
 
         self.df = pd.read_csv(self.filepath)
@@ -130,6 +139,11 @@ class ThirdPage(Frame):
 
         self.datas = {"name_values":list_index, "min":min_values, "max":max_values}
         self.df_new = pd.DataFrame(self.datas)
+        self.df_new["deltaV"] = self.df_new.apply(
+            lambda row: row["max"] - row["min"] if row["name_values"].startswith("V") else None,
+            axis=1)
+
+        print(self.df_new)
 
         scrollbarV1=Scrollbar(self.frameMinMax, orient="vertical")
         scrollbarV1.pack(side=RIGHT, fill=Y)
@@ -298,6 +312,7 @@ class ThirdPage(Frame):
         self.buttoncalculateCM.configure(state=DISABLED)
         self.buttonSend.configure(state=DISABLED)
         self.buttonPlot.configure(state=DISABLED)
+        self.buttonExcel.configure(state=DISABLED)
         self.buttonLoadFile.configure(state=NORMAL)
 
         self.frameDataTable.destroy()
@@ -333,14 +348,14 @@ class ThirdPage(Frame):
         entrya = Entry(newWindow, width=13)
         entrya.place(x=7, y=20)
         entrya.delete(0, END)
-        entrya.insert(0, "2") #5.64024
+        entrya.insert(0, "0.64755") #5.64024
 
         labelb = Label(newWindow, text="coefficient b")
         labelb.place(x=105, y=0)
         entryb = Entry(newWindow, width=13)
         entryb.place(x=107, y=20)
         entryb.delete(0, END)
-        entryb.insert(0, "3") #345.32
+        entryb.insert(0, "11.05801") #345.32
 
         def calculate():
             a = float(entrya.get())
@@ -350,7 +365,7 @@ class ThirdPage(Frame):
 
             def timx(y, a, b):
                 x = (y-b)/a
-                return round(x, 3)
+                return round(x, 2)
             
             for i in range(len(self.datas["min"])):
                 if i%2 != 0:
