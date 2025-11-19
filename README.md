@@ -98,5 +98,3 @@ Một số gói này có sẵn bản native wheels; việc cài đặt dễ dàn
 - Mở rộng tài liệu cho các hướng dẫn PDF hoặc chuyển đổi chúng sang Markdown.
 
 ---
-
-Bạn có thể tùy chỉnh README theo môi trường triển khai của mình (ví dụ: topic MQTT tùy chỉnh, backend lưu trữ dữ liệu thay thế).
