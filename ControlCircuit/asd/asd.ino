@@ -15,7 +15,7 @@ void setup()
 {  
   Wire.begin();
   Serial.begin(115200);
-  analogSetPinAttenuation(33, ADC_0db);
+//  analogSetPinAttenuation(33, ADC_0db);
 //  analogReference(EXTERNAL);
   //enable the potentiostat
   delay(500);
@@ -23,7 +23,7 @@ void setup()
   delay(500);
   initLMP();
   initASD();
-  delay(2000); //warm-up time for the sensor 
+  delay(2000);
 }
 
 void initASD()
@@ -33,53 +33,46 @@ void initASD()
 //  ADS.setMode(0);      //  continuous mode
 }
 
-
 void loop() 
 {                                    
   while(Serial.available()){
-    chuoi=Serial.readString();;//doc chuoi
-    
-    
-//chuoi="-500|600_2?25";
+    chuoi=Serial.readString();;
 
     for(int i=0;i<chuoi.length();i++){
       if(chuoi.charAt(i)=='|'){
-        moc1=i; //tim vi tri ki tu "|"
+        moc1=i;
         }
       if(chuoi.charAt(i)=='_'){
-        moc2=i; //tim vi tri ki tu "_"
+        moc2=i;
         }       
       if(chuoi.charAt(i)=='?'){
-        moc3=i; //tim vi tri ki tu "?"
+        moc3=i;
         }
       if(chuoi.charAt(i)=='#'){
-        moc4=i; //tim vi tri ki tu "#"
+        moc4=i;
         }                
       }
-      //chuoibandau -200|600_2?25#1
+      
       chuoi1=chuoi;
       chuoi2=chuoi;
-      chuoi1.remove(moc1); //chuoi1=-200
-      chuoi2.remove(0,moc1+1); // chuoi2=600\2?25#1
-      chuoi3=chuoi2; //chuoi3=600\2?25
-      chuoi2.remove(moc2-moc1-1);//chuoi2=600
-      chuoi3.remove(0,moc2-moc1);//chuoi3=2?25#1
-      chuoi4=chuoi3;//chuoi3=2?25#1
-      chuoi3.remove(moc3-moc2-1);//chuoi3=2
-      chuoi4.remove(0,moc3-moc2);//chuoi4=25#1
-      chuoi5=chuoi4;//chuoi5=25#1
-      chuoi4.remove(moc4-moc3-1);//chuoi4=25
-      chuoi5.remove(0,moc4-moc3);//chuoi5=1
+      chuoi1.remove(moc1);
+      chuoi2.remove(0,moc1+1);
+      chuoi3=chuoi2;
+      chuoi2.remove(moc2-moc1-1);
+      chuoi3.remove(0,moc2-moc1);
+      chuoi4=chuoi3;
+      chuoi3.remove(moc3-moc2-1);
+      chuoi4.remove(0,moc3-moc2);
+      chuoi5=chuoi4;
+      chuoi4.remove(moc4-moc3-1);
+      chuoi5.remove(0,moc4-moc3);
 
-
-      
       S_Vol=chuoi1.toInt();
       E_Vol=chuoi2.toInt();
       Step=chuoi3.toInt();
       Freq=chuoi4.toInt();
       Cycle=chuoi5.toInt();
-//            runCV(-200,600,10,25);
-//            runCV(600,-200,10,25);
+
   int i=0;
   while(i<Cycle)
   {
@@ -100,8 +93,6 @@ void initLMP()
   lmp.setThreeLead(); //3-lead amperometric cell mode                  
 }
 
-//Thí nghiệm 1: đổi biến freq từ double sang int: fail
-//Thí nghiệm 2: đặt stepV và freq thành biến cục bộ sau đó gán bằng Step và Freq: fail
 void runCV(int16_t startV, int16_t endV, int16_t stepV, double freq)
 
 {
@@ -144,26 +135,25 @@ void biasAndSample(int16_t voltage, double rate)
   //Serial.print("Time(ms): "); Serial.print(millis()); 
   //Serial.print(", Voltage(mV): "); 
   long int t1 = millis();
-//  Serial.print(voltage);
+  Serial.print(voltage);
 
   setBiasVoltage(voltage);
-  int16_t val_0 = ADS.readADC(0);  
-  int16_t val_1 = ADS.readADC(1); 
+  int16_t val_0 = ADS.readADC(0);
+  int16_t val_1 = ADS.readADC(1);
 
-  float tensao = lmp.getVoltage(val_0, 3.3, 14);
+  float temp = lmp.getVoltage(val_0, 3.3, 14);
   
-  float amperage = (tensao-1) / 7000;
+  float amperage = (temp-1) / 7000;
   //Serial.print(", Vout(V): ");
   //Serial.print(tensao,5);
   //Serial.print(", Current(uA): ");
   //Serial.print(",");
 //  Serial.print("|");
-//  Serial.print(";");
-//  Serial.println(amperage/pow(10,-6),5);
-
-  Serial.print(voltage); Serial.print(","); Serial.print(millis()-t1);Serial.print(","); Serial.println(rate);
-
-
+  Serial.print(";");
+  Serial.print(amperage/pow(10,-6),5);
+  Serial.print(";");
+  Serial.println(millis()-t1);
+//  Serial.print(voltage); Serial.print(","); Serial.print(millis()-t1);Serial.print(","); Serial.println(rate);
 
   delay(rate);
 }
@@ -174,7 +164,6 @@ void runCVForward(int16_t startV, int16_t endV, int16_t stepV, double freq)
   for (int16_t j = startV; j <= endV; j += stepV)
   {
     biasAndSample(j,freq);
-    //Serial.println();
   }
 }
 
@@ -185,6 +174,5 @@ void runCVBackward(int16_t startV, int16_t endV, int16_t stepV, double freq)
   for (int16_t j = startV; j >= endV; j -= stepV)
   {
     biasAndSample(j,freq);
-    //Serial.println();
   }
 }
